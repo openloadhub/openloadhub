@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLoadHub app icon</title>
+  <desc id="desc">OpenLoadHub app icon with a load pulse hub mark.</desc>
+  <defs>
+    <radialGradient id="bgGlow" cx="30%" cy="24%" r="76%">
+      <stop stop-color="#123347"/>
+      <stop offset=".52" stop-color="#0b1726"/>
+      <stop offset="1" stop-color="#060b12"/>
+    </radialGradient>
+    <linearGradient id="shell" x1="38" y1="30" x2="144" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#55f3dc"/>
+      <stop offset="1" stop-color="#078166"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="48" y1="99" x2="136" y2="75" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3bf6d7"/>
+      <stop offset=".55" stop-color="#16d4b1"/>
+      <stop offset="1" stop-color="#089c79"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bgGlow)"/>
+  <path d="M90 25 151 60v70L90 165 29 130V60L90 25Z" fill="#0d1d2b" stroke="url(#shell)" stroke-width="5"/>
+  <circle cx="90" cy="90" r="52" fill="none" stroke="#4bf0d6" stroke-opacity=".16" stroke-width="4"/>
+  <path d="M48 100h25l11-31 17 55 14-40h20" fill="none" stroke="url(#pulse)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ptp-common"
+version = "0.1.0"
+description = "Shared utilities and models for OpenLoadHub services."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Proprietary"}
+authors = [{name = "OpenLoadHub Maintainers"}]
+dependencies = []
+
+[tool.setuptools]
+packages = ["common"]

@@ -1,0 +1,16 @@
+# Grafana Dashboards Provisioning
+# 自动加载预定义 dashboard
+
+apiVersion: 1
+
+providers:
+  - name: 'OpenLoadHub Dashboards'
+    orgId: 1
+    folder: 'OpenLoadHub'
+    folderUid: 'ptp-folder'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

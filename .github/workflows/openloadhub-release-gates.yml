@@ -1,0 +1,164 @@
+name: OpenLoadHub Release Gates
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      frontend_build:
+        description: "Run npm ci and npm run build on the clean export candidate."
+        required: true
+        default: true
+        type: boolean
+      demo_smoke:
+        description: "Run the Docker demo smoke gate. This is opt-in because it is heavier."
+        required: true
+        default: false
+        type: boolean
+      demo_smoke_build:
+        description: "Build demo Docker images during the opt-in demo smoke gate."
+        required: true
+        default: false
+        type: boolean
+      demo_smoke_skip_run_exercise:
+        description: "Skip demo run exercise during opt-in demo smoke."
+        required: true
+        default: true
+        type: boolean
+      demo_smoke_timeout_seconds:
+        description: "Demo smoke timeout in seconds."
+        required: true
+        default: "180"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openloadhub-release-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-gates:
+    name: release-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUNBUFFERED: "1"
+      FRONTEND_BUILD: ${{ github.event_name != 'workflow_dispatch' || inputs.frontend_build }}
+      DEMO_SMOKE: ${{ github.event_name == 'workflow_dispatch' && inputs.demo_smoke }}
+      DEMO_SMOKE_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.demo_smoke_build }}
+      DEMO_SMOKE_SKIP_RUN_EXERCISE: ${{ github.event_name != 'workflow_dispatch' || inputs.demo_smoke_skip_run_exercise }}
+      DEMO_SMOKE_TIMEOUT_SECONDS: ${{ inputs.demo_smoke_timeout_seconds || '180' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Run release gate rehearsal
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/logs
+
+          if [[ -f scripts/run-openloadhub-release-gates.py ]]; then
+            args=(--require-clean-worktree)
+
+            if [[ "${FRONTEND_BUILD}" == "true" ]]; then
+              args+=(--with-frontend-build --with-frontend-npm-ci)
+            fi
+
+            if [[ "${DEMO_SMOKE}" == "true" ]]; then
+              args+=(--with-demo-smoke --demo-smoke-timeout-seconds "${DEMO_SMOKE_TIMEOUT_SECONDS}")
+              if [[ "${DEMO_SMOKE_BUILD}" == "true" ]]; then
+                args+=(--demo-smoke-build)
+              fi
+              if [[ "${DEMO_SMOKE_SKIP_RUN_EXERCISE}" == "true" ]]; then
+                args+=(--demo-smoke-skip-run-exercise)
+              fi
+            fi
+
+            set +e
+            python3 scripts/run-openloadhub-release-gates.py "${args[@]}" 2>&1 | tee .tmp/logs/openloadhub-release-gates-console.log
+            gate_status=${PIPESTATUS[0]}
+            set -e
+            exit "${gate_status}"
+          else
+            docker compose -f docker-compose.demo.yml config >/tmp/openloadhub-compose-config.txt
+
+            if [[ "${FRONTEND_BUILD}" == "true" ]]; then
+              npm --prefix frontend ci
+              npm --prefix frontend run build
+            fi
+
+            if [[ "${DEMO_SMOKE}" == "true" ]]; then
+              smoke_args=(--timeout-seconds "${DEMO_SMOKE_TIMEOUT_SECONDS}")
+              if [[ "${DEMO_SMOKE_BUILD}" == "true" ]]; then
+                smoke_args+=(--build)
+              fi
+              if [[ "${DEMO_SMOKE_SKIP_RUN_EXERCISE}" == "true" ]]; then
+                smoke_args+=(--skip-run-exercise)
+              fi
+              python3 scripts/run-opensource-demo-smoke.py "${smoke_args[@]}"
+            fi
+
+            {
+              echo "# OpenLoadHub Public CI Summary"
+              echo
+              echo "- compose_config: passed"
+              echo "- frontend_build: ${FRONTEND_BUILD}"
+              echo "- demo_smoke: ${DEMO_SMOKE}"
+              echo "- remote_pushed: false"
+              echo "- public_visibility_changed: false"
+              echo "- public_release_created: false"
+            } > .tmp/logs/openloadhub-release-gates-summary.md
+            {
+              echo "# OpenLoadHub Release Gates Fallback Log"
+              echo
+              echo "- scripts/run-openloadhub-release-gates.py: missing"
+              echo "- compose_config: passed"
+              echo "- frontend_build: ${FRONTEND_BUILD}"
+              echo "- demo_smoke: ${DEMO_SMOKE}"
+            } > .tmp/logs/openloadhub-release-gates-command.log
+          fi
+
+      - name: Upload release gate artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openloadhub-release-gates
+          path: |
+            .tmp/logs/openloadhub-release-gates-summary.json
+            .tmp/logs/openloadhub-release-gates-summary.md
+            .tmp/logs/openloadhub-release-gates-command.log
+            .tmp/logs/openloadhub-release-gates-console.log
+            .tmp/logs/opensource-export-candidate-summary.json
+            .tmp/logs/opensource-export-candidate-summary.md
+            .tmp/logs/opensource-public-candidate-risk-scan.json
+            .tmp/logs/opensource-public-candidate-risk-scan.md
+            .tmp/logs/opensource-repo-shape-summary.json
+            .tmp/logs/opensource-repo-shape-summary.md
+            .tmp/logs/opensource-publicization-pr-patch-summary.json
+            .tmp/logs/opensource-publicization-pr-patch-summary.md
+            .tmp/logs/opensource-publicization-pr.patch
+            .tmp/logs/opensource-publicization-pr.diffstat.txt
+            .tmp/logs/opensource-publicization-pr.changed-files.txt
+            .tmp/logs/opensource-demo-smoke-summary.json
+            .tmp/logs/opensource-demo-smoke-summary.md
+          if-no-files-found: ignore
+          retention-days: 14

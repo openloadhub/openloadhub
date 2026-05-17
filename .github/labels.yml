@@ -1,0 +1,46 @@
+# Public issue labels for OpenLoadHub.
+# Maintainers can apply these after public repo sync, for example:
+# gh label create "needs triage" --color D4C5F9 --description "Needs maintainer triage"
+
+- name: needs triage
+  color: D4C5F9
+  description: Needs maintainer triage before work starts.
+- name: type bug
+  color: D73A4A
+  description: Reproducible defect in the public alpha surface.
+- name: type enhancement
+  color: A2EEEF
+  description: Focused improvement request for an existing public alpha workflow.
+- name: type docs
+  color: 0075CA
+  description: Documentation, examples, screenshots, or troubleshooting.
+- name: good first issue
+  color: 7057FF
+  description: Small, bounded task suitable for a first contribution.
+- name: help wanted
+  color: 008672
+  description: Maintainer-approved task where community help is welcome.
+- name: area demo
+  color: C5DEF5
+  description: Local Docker demo, seed data, or demo target.
+- name: area frontend
+  color: C5DEF5
+  description: Browser UI, copy, layout, or interaction behavior.
+- name: area backend
+  color: C5DEF5
+  description: API, worker, agent, or data contract behavior.
+- name: area docs
+  color: C5DEF5
+  description: Public docs, examples, and onboarding material.
+- name: support
+  color: FEF2C0
+  description: Usage question or support request that fits the public alpha support boundary.
+- name: blocked
+  color: B60205
+  description: Cannot proceed without missing information, reproduction, or maintainer decision.
+- name: duplicate
+  color: CED1D5
+  description: Duplicate of an existing issue.
+- name: wontfix
+  color: FFFFFF
+  description: Outside the accepted public alpha scope.

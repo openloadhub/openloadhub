@@ -1,0 +1,31 @@
+# Grafana Datasources Provisioning
+# 自动配置 Prometheus 数据源
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: ${GRAFANA_PROMETHEUS_DATASOURCE_URL}
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      manageAlerts: false
+      prometheusType: Prometheus
+
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: ${GRAFANA_INFLUXDB_DATASOURCE_URL}
+    isDefault: false
+    editable: false
+    user: grafana
+    jsonData:
+      version: InfluxQL
+      dbName: ${GRAFANA_INFLUXDB_DATABASE}
+      httpMode: GET
+      httpHeaderName1: Authorization
+    secureJsonData:
+      httpHeaderValue1: Token ${INFLUXDB_TOKEN}

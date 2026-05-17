@@ -1,0 +1,28 @@
+[
+  {
+    "name": "openloadhub-planrun-feishu",
+    "channel": "feishu",
+    "event_types": ["plan_run_completed", "plan_run_failed"],
+    "webhook_url_env": "OPENLOADHUB_FEISHU_WEBHOOK_URL",
+    "signature_type": "feishu_v1",
+    "signing_secret_env": "OPENLOADHUB_FEISHU_SIGNING_SECRET",
+    "enabled": true,
+    "title": "OpenLoadHub 批次执行通知",
+    "template_file": "templates/plan-run-terminal.md",
+    "timeout_seconds": 5,
+    "max_retry_count": 2,
+    "retry_interval_seconds": 2
+  },
+  {
+    "name": "openloadhub-threshold-wecom",
+    "channel": "wecom",
+    "event_types": ["threshold_breached"],
+    "webhook_url_env": "OPENLOADHUB_WECOM_WEBHOOK_URL",
+    "enabled": false,
+    "title": "OpenLoadHub 阈值告警通知",
+    "template_file": "templates/threshold-breached.md",
+    "timeout_seconds": 5,
+    "max_retry_count": 1,
+    "retry_interval_seconds": 1
+  }
+]

@@ -1,0 +1,1370 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Engine-agnostic pod and agent observability dashboard for OpenLoadHub. Focuses on run-scoped Pod/Agent resource usage with node-aware labels and shared cAdvisor fallback while keeping exact run_id/run_token context.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "MaxCPU",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod Max CPU Usage (%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "AvgCPU",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod Avg CPU Usage (%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "description": "当前显示 run-scoped agent runtime 内存占用百分比峰值。若容器未设置 cgroup memory limit，则会按宿主机总内存回退计算，不应误读为严格 container working-set percent。",
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max(ptp_run_pod_memory_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "MaxMemoryUsagePercent",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod Max Memory Usage (%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "description": "当前显示 run-scoped agent runtime 内存占用百分比均值。若容器未设置 cgroup memory limit，则会按宿主机总内存回退计算。",
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg(ptp_run_pod_memory_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "AvgMemoryUsagePercent",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod Avg Memory Usage (%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"}",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 5
+      },
+      "description": "当前时序展示的是 agent runtime 内存百分比，不是严格的 cAdvisor container working-set 百分比；在没有 cgroup memory limit 时会按宿主机总内存回退。",
+      "id": 8,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "ptp_run_pod_memory_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"}",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Usage (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "count"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 13
+      },
+      "id": 9,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_socket_count_peak{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} socket_peak",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_socket_count_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} socket_current",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Socket 峰值 / 当前值",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      },
+      "description": "这里显示的是 agent 采样的 CPU load average / cAdvisor fallback，不等同于 CPU usage percent，应与左侧 CPU Usage (%) 分开理解。",
+      "id": 10,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_cpu_load_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} cpu_load_10s",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Load (10s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      },
+      "description": "当前 panel 仍展示 cAdvisor working-set bytes，但会用 run-scoped pod labels 补齐 `pod_ip / node_label`，避免 child panel 只剩容器名而失去双 Pod 上下文。",
+      "id": 12,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_memory_used_bytes_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"}) or (max by (pod_name) (label_replace(container_memory_working_set_bytes{id=~\"/docker/.+\"}, \"pod_name\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")) + on(pod_name) group_left(pod_ip, node_label, agent_host) (0 * max by (pod_name, pod_ip, node_label, agent_host) (ptp_run_pod_memory_usage_percent_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})))",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} working_set_bytes",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Working Set",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      },
+      "id": 11,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_network_rx_bytes_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} rx_bytes_per_sec",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_network_tx_bytes_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} tx_bytes_per_sec",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "description": "Host / EC2 口径下当前不提供可横比的进程级 network bytes 时，该 panel 会按设计留空，避免把宿主机 totals 误读为单个 agent 网络吞吐。",
+      "title": "网络吞吐速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      },
+      "id": 13,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_network_rx_packets_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} rx_packets_per_sec",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_network_tx_packets_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} tx_packets_per_sec",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "description": "Host / EC2 口径下当前不提供可横比的进程级 network packet 速率时，该 panel 会按设计留空，避免把宿主机 totals 混入 agent 监控语义。",
+      "title": "网络包量速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 21
+      },
+      "id": 14,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_disk_used_bytes_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} disk_used_bytes",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (node_label, pod_ip, agent_host) (ptp_run_pod_disk_total_bytes_current{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} disk_total_bytes",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "description": "Host / EC2 口径下当前不展示宿主机 filesystem used/total totals；若 panel 无数据，表示按设计留空，不代表采集链路故障。",
+      "title": "文件系统占用",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      },
+      "id": 15,
+      "options": {
+          "legend": {
+            "calcs": [
+              "lastNotNull",
+              "mean",
+              "max"
+            ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_disk_read_bytes_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} disk_read_bytes_per_sec",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (node_label, pod_ip, agent_host) (ptp_run_pod_disk_write_bytes_per_sec_avg{run_id=~\"${run_id}\", node_label=~\"${node_label}\", agent_host=~\"${agent_host}\"})",
+          "legendFormat": "node={{node_label}} pod={{pod_ip}} agent={{agent_host}} disk_write_bytes_per_sec",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "description": "Host / EC2 口径下当前不提供可横比的进程级 disk read/write bytes；若 panel 无数据，表示按设计留空，不代表采集链路故障。",
+      "title": "文件系统读写速率",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 21
+      },
+      "id": 16,
+      "mode": "markdown",
+      "options": {
+        "content": "**Current scope**: shared, engine-agnostic Pod/Agent resource monitoring. The lower socket / network / filesystem charts stay on run-scoped aggregate gauges (`ptp_run_pod_*`) so child-panel legends keep stable `pod_ip / node_label / agent_host` context instead of falling back to ambiguous container ids. `Memory Working Set` now prefers run-scoped memory-used bytes and only falls back to cAdvisor working-set bytes when that host/runtime gauge is absent, so the same shared dashboard still reads as a multi-Pod monitor. Container-level fallback scope should come from run metadata when available and otherwise fall back to a wildcard regex instead of a fixed `ptp-agent.*` naming assumption. **Runtime scope semantics**: host / EC2 runtime shows machine-level resource usage, while docker / K8S runtime shows container-level resource usage. These two scopes should not be compared as if they shared the same denominator. For host / EC2 runtime, network and filesystem panels may intentionally stay empty because this workspace does not publish reliable process-scope host bytes counters on macOS; empty here means **withheld to avoid misleading totals**, not a broken pipeline. The dashboard presents four CPU/Memory summary cards first, then overview, CPU/Memory, network and filesystem resource charts. Run-scoped context is limited to run_id filtering; no chart depends on engine-specific request or error metrics.",
+        "mode": "markdown"
+      },
+      "title": "采集范围说明",
+      "type": "text"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "ptp",
+    "pod",
+    "agent",
+    "cadvisor"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": true,
+        "type": "datasource"
+      },
+      {
+      "current": {
+        "selected": true,
+        "text": ".*",
+        "value": ".*"
+      },
+        "hide": 0,
+        "label": "Run ID / Regex",
+        "name": "run_id",
+        "options": [],
+    "query": ".*",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+      "current": {
+        "selected": true,
+        "text": ".*",
+        "value": ".*"
+      },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(ptp_run_rps{run_token=~\"^(${run_id})-.*\"}, run_token)",
+        "hide": 2,
+        "includeAll": false,
+        "label": "Run Token",
+        "multi": false,
+        "name": "run_token",
+        "options": [],
+    "query": {
+      "query": "label_values(ptp_run_rps{run_token=~\"^(${run_id})-.*\"}, run_token)",
+      "refId": "RunTokenVariable"
+    },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\"}, node_label)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node Label",
+        "multi": true,
+        "name": "node_label",
+        "options": [],
+        "query": {
+          "query": "label_values(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\"}, node_label)",
+          "refId": "NodeLabelVariable"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\"}, agent_host)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Agent Host",
+        "multi": true,
+        "name": "agent_host",
+        "options": [],
+        "query": {
+          "query": "label_values(ptp_run_pod_cpu_usage_percent_current{run_id=~\"${run_id}\"}, agent_host)",
+          "refId": "AgentHostVariable"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        },
+        "hide": 0,
+        "label": "Compose Service",
+        "name": "compose_service",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "__no_container_hint__",
+          "value": "__no_container_hint__"
+        },
+        "hide": 2,
+        "label": "Container Hint",
+        "name": "container_hint",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timezone": "",
+  "title": "Agent Runtime Monitor Dashboard",
+  "uid": "pod-monitor-dashboard",
+  "version": 4,
+  "weekStart": ""
+}

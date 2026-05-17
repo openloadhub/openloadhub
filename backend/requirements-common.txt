@@ -1,0 +1,51 @@
+# Web 框架
+fastapi==0.115.0
+uvicorn[standard]>=0.30.0
+
+# 数据库
+sqlalchemy>=2.0.0,<3.0.0
+pymysql>=1.1.0
+alembic>=1.12.0
+
+# 异步任务
+celery>=5.3.0,<6.0.0
+redis>=5.0.0
+flower>=2.0.0,<3.0.0
+tornado>=6.2,<7.0
+
+# 服务发现
+# 固定到当前已验证版本，避免 Docker build 时 nacos-sdk-python/a2a-sdk resolver backtracking。
+nacos-sdk-python==2.0.11
+
+# AWS
+boto3>=1.34.0
+
+# 工具库
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+httpx==0.27.0
+email-validator>=2.0.0
+psutil>=7.0.0
+PyYAML>=6.0.0
+
+# 认证
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.6
+
+# 日志
+structlog>=23.0.0
+
+# 监控
+prometheus-client>=0.19.0
+grpcio>=1.71.0,<2.0.0
+grpcio-reflection>=1.71.0,<2.0.0
+
+# 开发工具
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.0.0
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.7.0

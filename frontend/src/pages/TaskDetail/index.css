@@ -1,0 +1,206 @@
+.olh-task-detail-page {
+  --task-detail-primary: #0d9488;
+  --task-detail-soft: rgba(13, 148, 136, 0.08);
+  --task-detail-card: #ffffff;
+  --task-detail-card-soft: #f8fafc;
+  --task-detail-border: #dbe6e2;
+  --task-detail-border-strong: #c6d9d3;
+  --task-detail-text: #10231f;
+  --task-detail-muted: #5f706b;
+}
+
+.olh-task-detail-page .ant-card {
+  border-radius: 8px;
+  border-color: var(--task-detail-border);
+  background: linear-gradient(180deg, var(--task-detail-card) 0%, color-mix(in srgb, var(--task-detail-card) 92%, var(--task-detail-card-soft) 8%) 100%);
+}
+
+.olh-task-detail-page .ant-card-head {
+  min-height: 40px;
+  border-color: var(--task-detail-border);
+}
+
+.olh-task-detail-page .ant-card-head-title {
+  color: var(--task-detail-text);
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.olh-task-detail-hero {
+  border-color: var(--task-detail-border-strong) !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--task-detail-card-soft) 88%, var(--task-detail-primary) 12%) 0%, var(--task-detail-card) 66%),
+    var(--task-detail-card) !important;
+}
+
+.olh-task-detail-hero .ant-card-body,
+.olh-task-detail-panel .ant-card-body {
+  padding: 16px !important;
+}
+
+.olh-task-detail-page .ant-btn {
+  border-radius: 7px;
+  font-weight: 620;
+}
+
+.olh-task-detail-page .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) {
+  background: var(--olh-solid-primary-bg);
+  border-color: var(--olh-solid-primary-border);
+  color: #ffffff !important;
+}
+
+.olh-task-detail-page .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) > span {
+  color: #ffffff !important;
+}
+
+.olh-task-detail-page .ant-btn-primary:not(:disabled):hover,
+.olh-task-detail-page .ant-btn-primary:not(:disabled):focus-visible {
+  background: var(--olh-solid-primary-hover-bg);
+  border-color: var(--olh-solid-primary-hover-border);
+  color: #ffffff !important;
+}
+
+.olh-task-detail-page .ant-btn-primary:not(:disabled):hover > span,
+.olh-task-detail-page .ant-btn-primary:not(:disabled):focus-visible > span {
+  color: #ffffff !important;
+}
+
+.olh-task-detail-page .ant-descriptions-item-label {
+  width: 116px;
+  color: var(--task-detail-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.olh-task-detail-page .ant-descriptions-item-content {
+  color: var(--task-detail-text);
+  font-weight: 520;
+}
+
+.olh-task-detail-page .ant-typography,
+.olh-task-detail-page .ant-typography a {
+  color: var(--task-detail-text);
+}
+
+.olh-task-detail-page .ant-tag-blue,
+.olh-task-detail-page .ant-tag-processing,
+.olh-task-detail-page .ant-tag-purple {
+  color: var(--task-detail-primary) !important;
+  background: var(--task-detail-soft) !important;
+  border-color: color-mix(in srgb, var(--task-detail-primary) 30%, transparent) !important;
+}
+
+.olh-task-detail-run-table .ant-table {
+  font-size: 12.5px;
+}
+
+.olh-task-detail-run-table .ant-table-thead > tr > th {
+  height: 36px;
+  padding-block: 8px !important;
+  background: color-mix(in srgb, var(--task-detail-card-soft) 90%, var(--task-detail-primary) 10%) !important;
+  color: var(--task-detail-muted) !important;
+  font-weight: 720;
+}
+
+.olh-task-detail-run-table .ant-table-tbody > tr > td {
+  padding-block: 8px !important;
+  border-color: var(--task-detail-border) !important;
+}
+
+.olh-task-detail-run-table .ant-table-tbody > tr:nth-child(even) > td {
+  background: color-mix(in srgb, var(--task-detail-card-soft) 52%, var(--task-detail-card) 48%) !important;
+}
+
+.olh-task-detail-run-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: color-mix(in srgb, var(--task-detail-primary) 8%, var(--task-detail-card)) !important;
+}
+
+.olh-task-detail-panel .ant-card-hoverable {
+  border-color: color-mix(in srgb, var(--task-detail-border) 84%, var(--task-detail-primary) 16%);
+  background: color-mix(in srgb, var(--task-detail-card) 94%, var(--task-detail-card-soft) 6%) !important;
+  box-shadow: none;
+}
+
+.olh-task-detail-panel .ant-card-hoverable:hover {
+  border-color: color-mix(in srgb, var(--task-detail-primary) 38%, var(--task-detail-border));
+  box-shadow: 0 8px 18px rgba(13, 148, 136, 0.08);
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page,
+[data-theme='hybrid-dark'] .olh-task-detail-page {
+  --task-detail-primary: #14b8a6;
+  --task-detail-soft: rgba(20, 184, 166, 0.12);
+  --task-detail-card: #0f1724;
+  --task-detail-card-soft: #121c2b;
+  --task-detail-border: #243244;
+  --task-detail-border-strong: #2f4f4b;
+  --task-detail-text: #f3f7fb;
+  --task-detail-muted: #93a4b8;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-card,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-card {
+  background: linear-gradient(180deg, #0f1724 0%, #0a1019 100%);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-descriptions-item-content,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-descriptions-item-content {
+  color: #e5edf6 !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-descriptions-item-label,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-descriptions-item-label {
+  color: #93a4b8 !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-typography,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-typography {
+  color: #e5edf6;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-typography-secondary,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-typography-secondary {
+  color: #93a4b8 !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page a,
+[data-theme='hybrid-dark'] .olh-task-detail-page a {
+  color: #14b8a6;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-card-hoverable,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-card-hoverable {
+  border-color: #334155;
+  background: linear-gradient(180deg, #111c2b 0%, #0f1724 100%) !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-page .ant-card-hoverable .anticon,
+[data-theme='apple-dark'] .olh-task-detail-page .ant-card-hoverable div,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-card-hoverable .anticon,
+[data-theme='hybrid-dark'] .olh-task-detail-page .ant-card-hoverable div {
+  color: #b8c4d4;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-hero,
+[data-theme='hybrid-dark'] .olh-task-detail-hero {
+  background: linear-gradient(135deg, rgba(15, 32, 43, 0.98) 0%, rgba(7, 12, 20, 0.99) 68%) !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-run-table .ant-table-thead > tr > th,
+[data-theme='hybrid-dark'] .olh-task-detail-run-table .ant-table-thead > tr > th {
+  background: #172033 !important;
+  color: #b8c4d4 !important;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-run-table .ant-table-tbody > tr > td,
+[data-theme='hybrid-dark'] .olh-task-detail-run-table .ant-table-tbody > tr > td {
+  background: #0f1724 !important;
+  border-color: #223047 !important;
+  color: #f3f7fb;
+}
+
+[data-theme='apple-dark'] .olh-task-detail-run-table .ant-table-tbody > tr:nth-child(even) > td,
+[data-theme='hybrid-dark'] .olh-task-detail-run-table .ant-table-tbody > tr:nth-child(even) > td {
+  background: #111c2b !important;
+}

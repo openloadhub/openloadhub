@@ -1,0 +1,526 @@
+{
+  "uid": "mysql-dashboard",
+  "title": "MySQL Exporter Dashboard",
+  "schemaVersion": 39,
+  "version": 3,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data Source",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        }
+      },
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "textbox",
+        "query": "mysql",
+        "current": {
+          "selected": true,
+          "text": "mysql",
+          "value": "mysql"
+        }
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        }
+      },
+      {
+        "name": "compose_service",
+        "label": "Compose Service",
+        "type": "textbox",
+        "query": "mysql",
+        "current": {
+          "selected": true,
+          "text": "mysql",
+          "value": "mysql"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "MySQL Up",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(mysql_up{job=~\"$job\", instance=~\"$instance\"})",
+          "legendFormat": "up"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Connection Utilization (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * max(mysql_global_status_threads_connected{job=~\"$job\", instance=~\"$instance\"}) / clamp_min(max(mysql_global_variables_max_connections{job=~\"$job\", instance=~\"$instance\"}), 1)",
+          "legendFormat": "utilization"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "QPS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mysql_global_status_questions{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "qps"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Threads Running",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(mysql_global_status_threads_running{job=~\"$job\", instance=~\"$instance\"})",
+          "legendFormat": "running"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Slow Queries (5m)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(mysql_global_status_slow_queries{job=~\"$job\", instance=~\"$instance\"}[5m]))",
+          "legendFormat": "slow"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "MySQL CPU Usage (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{job=\"cadvisor\", cpu=\"total\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval])) / clamp_min(max(machine_cpu_cores), 1)",
+          "legendFormat": "cpu"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "MySQL Memory Usage (%)",
+      "description": "MySQL 容器 working set / Docker Desktop VM 可见总内存。当前本地容器未设置 memory limit，不能表达为容器限额百分比。",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * container_memory_working_set_bytes{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"} / scalar(max(machine_memory_bytes{job=\"cadvisor\"}))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} host-memory%"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 5
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "MySQL Container IO Throughput",
+      "description": "MySQL 容器级文件系统读写速率（来自 cAdvisor）。",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} read"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} write"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 5
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Connections and Threads",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "mysql_global_status_threads_connected{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} connected"
+        },
+        {
+          "refId": "B",
+          "expr": "mysql_global_status_threads_running{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} running"
+        },
+        {
+          "refId": "C",
+          "expr": "mysql_global_status_max_used_connections{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} max-used"
+        },
+        {
+          "refId": "D",
+          "expr": "mysql_global_variables_max_connections{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} max-config"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Read and Write Commands",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (command) (rate(mysql_global_status_commands_total{job=~\"$job\", instance=~\"$instance\", command=~\"select|insert|update|delete\"}[$__rate_interval]))",
+          "legendFormat": "{{command}}/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Network Throughput",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_bytes_received{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} bytes in/s"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(mysql_global_status_bytes_sent{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} bytes out/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Slow Queries and Connection Errors",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_slow_queries{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} slow/s"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(mysql_global_status_aborted_clients{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} aborted-clients/s"
+        },
+        {
+          "refId": "C",
+          "expr": "rate(mysql_global_status_aborted_connects{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} aborted-connects/s"
+        },
+        {
+          "refId": "D",
+          "expr": "sum by (error) (rate(mysql_global_status_connection_errors_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "{{error}}/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 13
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Temporary Tables and Table Cache",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_created_tmp_tables{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} tmp-tables/s"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(mysql_global_status_created_tmp_disk_tables{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} tmp-disk/s"
+        },
+        {
+          "refId": "C",
+          "expr": "100 * rate(mysql_global_status_table_open_cache_hits{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) / clamp_min(rate(mysql_global_status_table_open_cache_hits{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) + rate(mysql_global_status_table_open_cache_misses{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) + rate(mysql_global_status_table_open_cache_overflows{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]), 1)",
+          "legendFormat": "{{instance}} cache-hit-%"
+        },
+        {
+          "refId": "D",
+          "expr": "mysql_global_status_open_tables{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} open-tables"
+        },
+        {
+          "refId": "E",
+          "expr": "rate(mysql_global_status_opened_tables{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} opened/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 21
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "InnoDB Buffer Pool Efficiency",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - rate(mysql_global_status_innodb_buffer_pool_reads{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) / clamp_min(rate(mysql_global_status_innodb_buffer_pool_read_requests{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]), 1))",
+          "legendFormat": "{{instance}} hit-ratio-%"
+        },
+        {
+          "refId": "B",
+          "expr": "mysql_global_status_innodb_buffer_pool_bytes_data{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} bytes-data"
+        },
+        {
+          "refId": "C",
+          "expr": "mysql_global_status_innodb_buffer_pool_bytes_dirty{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} bytes-dirty"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "InnoDB Pending IO and Log Waits",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "mysql_global_status_innodb_data_pending_reads{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} pending-reads"
+        },
+        {
+          "refId": "B",
+          "expr": "mysql_global_status_innodb_data_pending_writes{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} pending-writes"
+        },
+        {
+          "refId": "C",
+          "expr": "mysql_global_status_innodb_data_pending_fsyncs{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} pending-fsyncs"
+        },
+        {
+          "refId": "D",
+          "expr": "rate(mysql_global_status_innodb_log_waits{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} log-waits/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 16,
+        "y": 21
+      }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Lock Waits",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "mysql_global_status_innodb_row_lock_current_waits{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} current-waits"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(mysql_global_status_innodb_row_lock_waits{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} row-lock-waits/s"
+        },
+        {
+          "refId": "C",
+          "expr": "mysql_global_status_innodb_row_lock_time_avg{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} row-lock-time-avg"
+        },
+        {
+          "refId": "D",
+          "expr": "mysql_global_status_innodb_row_lock_time_max{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} row-lock-time-max"
+        },
+        {
+          "refId": "E",
+          "expr": "rate(mysql_global_status_table_locks_waited{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} table-locks-waited/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      }
+    }
+  ]
+}

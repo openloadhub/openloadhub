@@ -1,0 +1,484 @@
+{
+  "uid": "redis-dashboard",
+  "title": "Redis Exporter Dashboard",
+  "schemaVersion": 39,
+  "version": 3,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data Source",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        }
+      },
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "textbox",
+        "query": "redis",
+        "current": {
+          "selected": true,
+          "text": "redis",
+          "value": "redis"
+        }
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        }
+      },
+      {
+        "name": "compose_service",
+        "label": "Compose Service",
+        "type": "textbox",
+        "query": "redis",
+        "current": {
+          "selected": true,
+          "text": "redis",
+          "value": "redis"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Redis Up",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(redis_up{job=~\"$job\", instance=~\"$instance\"})",
+          "legendFormat": "up"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Connected Clients",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(redis_connected_clients{job=~\"$job\", instance=~\"$instance\"})",
+          "legendFormat": "clients"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Command Rate",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(redis_commands_processed_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "ops/s"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Cache Hit Ratio (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(redis_keyspace_hits_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) + sum(rate(redis_keyspace_misses_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])), 1)",
+          "legendFormat": "hit ratio"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Blocked Clients",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(redis_blocked_clients{job=~\"$job\", instance=~\"$instance\"})",
+          "legendFormat": "blocked"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Redis CPU Usage (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{job=\"cadvisor\", cpu=\"total\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval])) / clamp_min(max(machine_cpu_cores), 1)",
+          "legendFormat": "cpu"
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Clients and Connections",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_connected_clients{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} connected"
+        },
+        {
+          "refId": "B",
+          "expr": "redis_blocked_clients{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} blocked"
+        },
+        {
+          "refId": "C",
+          "expr": "rate(redis_connections_received_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} connections/s"
+        },
+        {
+          "refId": "D",
+          "expr": "rate(redis_rejected_connections_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} rejected/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 5
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Redis Memory Usage (%)",
+      "description": "Redis 容器 working set / Docker Desktop VM 可见总内存。当前本地容器未设置 memory limit，不能表达为容器限额百分比。",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * container_memory_working_set_bytes{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"} / scalar(max(machine_memory_bytes{job=\"cadvisor\"}))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} host-memory%"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 5
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Redis Container IO Throughput",
+      "description": "Redis 容器级文件系统读写速率（来自 cAdvisor）。",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} read"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\", container_label_com_docker_compose_service=~\"$compose_service\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} write"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Memory and Fragmentation",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_memory_used_bytes{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} used"
+        },
+        {
+          "refId": "B",
+          "expr": "redis_memory_used_rss_bytes{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} rss"
+        },
+        {
+          "refId": "C",
+          "expr": "redis_memory_used_peak_bytes{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} peak"
+        },
+        {
+          "refId": "D",
+          "expr": "redis_mem_fragmentation_ratio{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} frag"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Command Failures and Latency",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cmd) (rate(redis_commands_failed_calls_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "{{cmd}} failed/s"
+        },
+        {
+          "refId": "B",
+          "expr": "1000 * rate(redis_latency_percentiles_usec_sum{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) / clamp_min(rate(redis_latency_percentiles_usec_count{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]), 1)",
+          "legendFormat": "{{cmd}} avg ms"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Keyspace and Expiring Keys",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_db_keys{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} {{db}} keys"
+        },
+        {
+          "refId": "B",
+          "expr": "redis_db_keys_expiring{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} {{db}} expiring"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 13
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "TTL and Cache Quality",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_db_avg_ttl_seconds{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} {{db}} ttl"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(redis_keyspace_hits_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} hits/s"
+        },
+        {
+          "refId": "C",
+          "expr": "rate(redis_keyspace_misses_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} misses/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 21
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Expired and Evicted Keys",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(redis_expired_keys_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} expired/s"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(redis_evicted_keys_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} evicted/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Persistence and Slowlog",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_rdb_bgsave_in_progress{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} rdb in-progress"
+        },
+        {
+          "refId": "B",
+          "expr": "redis_rdb_last_bgsave_status{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} rdb status"
+        },
+        {
+          "refId": "C",
+          "expr": "redis_aof_last_write_status{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} aof status"
+        },
+        {
+          "refId": "D",
+          "expr": "redis_last_slow_execution_duration_seconds{job=~\"$job\", instance=~\"$instance\"} * 1000",
+          "legendFormat": "{{instance}} last slow ms"
+        },
+        {
+          "refId": "E",
+          "expr": "redis_slowlog_length{job=~\"$job\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} slowlog"
+        },
+        {
+          "refId": "F",
+          "expr": "redis_latest_fork_seconds{job=~\"$job\", instance=~\"$instance\"} * 1000",
+          "legendFormat": "{{instance}} fork ms"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 16,
+        "y": 21
+      }
+    }
+  ]
+}

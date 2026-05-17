@@ -1,0 +1,561 @@
+name: openloadhub-demo
+
+networks:
+  openloadhub-demo:
+
+volumes:
+  mysql-data:
+  redis-data:
+  influxdb-data:
+  grafana-data:
+  prometheus-data:
+  tmp-scripts:
+  tmp-task-assets:
+  tmp-reports:
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ptp_demo_root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ptp}
+      MYSQL_USER: ${MYSQL_USER:-ptp}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ptp_demo_password}
+    ports:
+      - "${MYSQL_PORT:-13306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+    networks:
+      - openloadhub-demo
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    # Demo Redis is intentionally ephemeral; seed scripts recreate demo state.
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --stop-writes-on-bgsave-error
+      - "no"
+    ports:
+      - "${REDIS_PORT:-16379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - openloadhub-demo
+
+  redis-exporter:
+    image: ${REDIS_EXPORTER_IMAGE:-oliver006/redis_exporter:v1.67.0}
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    ports:
+      - "${REDIS_EXPORTER_PORT:-19121}:9121"
+    depends_on:
+      - redis
+    networks:
+      - openloadhub-demo
+
+  mysqld-exporter:
+    image: ${MYSQLD_EXPORTER_IMAGE:-prom/mysqld-exporter:v0.14.0}
+    restart: unless-stopped
+    command:
+      - "--no-collect.slave_status"
+    environment:
+      DATA_SOURCE_NAME: "${MYSQL_USER:-ptp}:${MYSQL_PASSWORD:-ptp_demo_password}@(mysql:3306)/${MYSQL_DATABASE:-ptp}"
+    ports:
+      - "${MYSQLD_EXPORTER_PORT:-19104}:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - openloadhub-demo
+
+  cadvisor:
+    image: ${CADVISOR_IMAGE:-gcr.io/cadvisor/cadvisor:v0.50.0}
+    restart: unless-stopped
+    privileged: true
+    command:
+      - "-logtostderr"
+      - "-docker=unix:///docker.sock"
+      - "-enable_metrics=cpu,cpuLoad,memory,network,disk,diskIO,tcp,udp"
+      - "-store_container_labels=false"
+      - "-whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project"
+    ports:
+      - "${CADVISOR_PORT:-18098}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - ${HOME}/.docker/run/docker.sock:/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks:
+      - openloadhub-demo
+
+  pushgateway:
+    image: prom/pushgateway:v1.7.0
+    restart: unless-stopped
+    ports:
+      - "${PUSHGATEWAY_PORT:-19091}:9091"
+    networks:
+      - openloadhub-demo
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-24h}"
+      - "--web.enable-remote-write-receiver"
+      - "--enable-feature=native-histograms"
+    volumes:
+      - ./docker/prometheus.demo.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-19090}:9090"
+    depends_on:
+      - pushgateway
+      - redis-exporter
+      - mysqld-exporter
+      - cadvisor
+    networks:
+      - openloadhub-demo
+
+  demo-target:
+    build:
+      context: .
+      dockerfile: demo/target-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      DEMO_TARGET_HTTP_PORT: "8080"
+      DEMO_TARGET_GRPC_PORT: "50051"
+    ports:
+      - "${DEMO_TARGET_HTTP_PORT:-18088}:8080"
+      - "${DEMO_TARGET_GRPC_PORT:-15051}:50051"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2).read()\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    networks:
+      - openloadhub-demo
+
+  influxdb:
+    image: influxdb:2.7
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:-ptp_demo_influx}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:-ptp}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:-jmeter}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION:-168h}
+    ports:
+      - "${INFLUXDB_PORT:-18086}:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    networks:
+      - openloadhub-demo
+
+  grafana:
+    image: grafana/grafana:10.4.3
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-ptp_demo_grafana}
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_USERS_VIEWERS_CAN_EDIT: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_PUBLIC_BASE_URL:-http://127.0.0.1:13001}
+      GRAFANA_PROMETHEUS_DATASOURCE_URL: http://prometheus:9090
+      GRAFANA_INFLUXDB_DATASOURCE_URL: http://influxdb:8086
+      GRAFANA_INFLUXDB_DATABASE: ${GRAFANA_INFLUXDB_DATABASE:-jmeter}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-13001}:3000"
+    depends_on:
+      - prometheus
+      - influxdb
+      - redis-exporter
+      - mysqld-exporter
+      - cadvisor
+    networks:
+      - openloadhub-demo
+
+  ptp-admin:
+    build:
+      context: .
+      dockerfile: backend/ptp-admin/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${OPENLOADHUB_DOCKER_DATABASE_URL:-mysql+pymysql://ptp:ptp_demo_password@mysql:3306/ptp}
+      CELERY_BROKER_URL: ${OPENLOADHUB_DOCKER_CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${OPENLOADHUB_DOCKER_CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      PUSHGATEWAY_URL: ${OPENLOADHUB_DOCKER_PUSHGATEWAY_URL:-http://pushgateway:9091}
+      PROMETHEUS_URL: ${OPENLOADHUB_DOCKER_PROMETHEUS_URL:-http://prometheus:9090}
+      GRAFANA_BASE_URL: ${OPENLOADHUB_DOCKER_GRAFANA_BASE_URL:-http://grafana:3000}
+      GRAFANA_PUBLIC_BASE_URL: ${GRAFANA_PUBLIC_BASE_URL:-http://127.0.0.1:13001}
+      JMETER_DASHBOARD_UID: ${JMETER_DASHBOARD_UID:-jmeter-load-test-influx}
+      PTP_PUBLIC_BASE_URL: ${PTP_PUBLIC_BASE_URL:-http://127.0.0.1:13000}
+      ENABLE_NACOS: ${ENABLE_NACOS:-0}
+      APP_NAME: ${APP_NAME:-OpenLoadHub}
+      SECRET_KEY: ${OPENLOADHUB_SECRET_KEY:-change-me-at-least-32-characters}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_SECONDS: ${ACCESS_TOKEN_EXPIRE_SECONDS:-3600}
+      USE_S3: "0"
+      PTP_REPORTS_DIR: ${PTP_REPORTS_DIR:-/tmp_reports}
+      APP_DEBUG: ${APP_DEBUG:-0}
+      TESTING: ${TESTING:-0}
+      # Demo plans run two rounds; keep the watchdog grace above the 60s code default.
+      PLAN_RUN_TIMEOUT_WATCHDOG_GRACE_SECONDS: ${PLAN_RUN_TIMEOUT_WATCHDOG_GRACE_SECONDS:-300}
+      PTP_PUBLIC_ALPHA_MODE: ${PTP_PUBLIC_ALPHA_MODE:-true}
+      PTP_ENABLE_MIXED_RUNS: ${PTP_ENABLE_MIXED_RUNS:-false}
+      PTP_ENABLE_SELF_APM: ${PTP_ENABLE_SELF_APM:-false}
+      PTP_ENABLE_NOTIFICATIONS: ${PTP_ENABLE_NOTIFICATIONS:-false}
+      PTP_ENABLE_ALERTS: ${PTP_ENABLE_ALERTS:-false}
+      PTP_ENABLE_PLANS: ${PTP_ENABLE_PLANS:-true}
+      PTP_ENABLE_PLAN_RUNS: ${PTP_ENABLE_PLAN_RUNS:-true}
+      PTP_ENABLE_TREND_ANALYSIS: ${PTP_ENABLE_TREND_ANALYSIS:-false}
+      PTP_ENABLE_AI_FEATURES: ${PTP_ENABLE_AI_FEATURES:-false}
+      NOTIFICATION_ENV_LABEL: ${NOTIFICATION_ENV_LABEL:-demo}
+      PTP_WEBHOOK_BOOTSTRAP_FILE: ${PTP_WEBHOOK_BOOTSTRAP_FILE:-}
+      OPENLOADHUB_FEISHU_WEBHOOK_URL: ${OPENLOADHUB_FEISHU_WEBHOOK_URL:-}
+      OPENLOADHUB_FEISHU_SIGNING_SECRET: ${OPENLOADHUB_FEISHU_SIGNING_SECRET:-}
+      OPENLOADHUB_WECOM_WEBHOOK_URL: ${OPENLOADHUB_WECOM_WEBHOOK_URL:-}
+      OPENLOADHUB_DINGTALK_WEBHOOK_URL: ${OPENLOADHUB_DINGTALK_WEBHOOK_URL:-}
+      ALLOW_SELF_REGISTER: ${ALLOW_SELF_REGISTER:-0}
+      DEFAULT_ADMIN_USERNAME: ${DEFAULT_ADMIN_USERNAME:-admin}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-ptp_demo_admin}
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL:-admin@example.com}
+      DEFAULT_TESTER_USERNAME: ${DEFAULT_TESTER_USERNAME:-demo_tester}
+      DEFAULT_TESTER_PASSWORD: ${DEFAULT_TESTER_PASSWORD:-ptp_demo_tester}
+      DEFAULT_TESTER_EMAIL: ${DEFAULT_TESTER_EMAIL:-demo_tester@example.com}
+      DEFAULT_TESTER_FULL_NAME: ${DEFAULT_TESTER_FULL_NAME:-Demo Tester}
+      BUSINESS_LINES: ${BUSINESS_LINES:-demo:demo}
+      ENVIRONMENTS: ${ENVIRONMENTS:-demo:demo:test,testnet:TestNet:testnet,mainnet:主网:main}
+      AGENT_HOSTS: ${OPENLOADHUB_DOCKER_AGENT_HOSTS:-ptp-agent:9096,ptp-agent-2:9096,ptp-agent-3:9096,ptp-agent-4:9096}
+    ports:
+      - "${PTP_ADMIN_PORT:-18000}:8000"
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+      - tmp-reports:/tmp_reports
+    depends_on:
+      ptp-admin-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      prometheus:
+        condition: service_started
+      influxdb:
+        condition: service_started
+    networks:
+      - openloadhub-demo
+
+  ptp-admin-migrate:
+    build:
+      context: .
+      dockerfile: backend/ptp-admin/Dockerfile
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: ${OPENLOADHUB_DOCKER_DATABASE_URL:-mysql+pymysql://ptp:ptp_demo_password@mysql:3306/ptp}
+      USE_S3: "0"
+      PTP_PUBLIC_ALPHA_MODE: "true"
+      PTP_ENABLE_AI_FEATURES: "false"
+      ENABLE_NACOS: ${ENABLE_NACOS:-0}
+      APP_NAME: ${APP_NAME:-OpenLoadHub}
+      SECRET_KEY: ${OPENLOADHUB_SECRET_KEY:-change-me-at-least-32-characters}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - openloadhub-demo
+
+  ptp-worker:
+    build:
+      context: .
+      dockerfile: backend/ptp-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${OPENLOADHUB_DOCKER_DATABASE_URL:-mysql+pymysql://ptp:ptp_demo_password@mysql:3306/ptp}
+      CELERY_BROKER_URL: ${OPENLOADHUB_DOCKER_CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${OPENLOADHUB_DOCKER_CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      PUSHGATEWAY_URL: ${OPENLOADHUB_DOCKER_PUSHGATEWAY_URL:-http://pushgateway:9091}
+      PROMETHEUS_URL: ${OPENLOADHUB_DOCKER_PROMETHEUS_URL:-http://prometheus:9090}
+      PTP_PUBLIC_BASE_URL: ${PTP_PUBLIC_BASE_URL:-http://127.0.0.1:13000}
+      ENABLE_NACOS: ${ENABLE_NACOS:-0}
+      APP_NAME: ${APP_NAME:-OpenLoadHub}
+      SECRET_KEY: ${OPENLOADHUB_SECRET_KEY:-change-me-at-least-32-characters}
+      USE_S3: "0"
+      PTP_REPORTS_DIR: ${PTP_REPORTS_DIR:-/tmp_reports}
+      PTP_PUBLIC_ALPHA_MODE: ${PTP_PUBLIC_ALPHA_MODE:-true}
+      PTP_ENABLE_AI_FEATURES: ${PTP_ENABLE_AI_FEATURES:-false}
+      PTP_ENABLE_NOTIFICATIONS: ${PTP_ENABLE_NOTIFICATIONS:-false}
+      NOTIFICATION_ENV_LABEL: ${NOTIFICATION_ENV_LABEL:-demo}
+      PTP_WORKER_CONCURRENCY: ${PTP_WORKER_CONCURRENCY:-2}
+      # Demo plans run two rounds; keep the watchdog grace above the 60s code default.
+      PLAN_RUN_TIMEOUT_WATCHDOG_GRACE_SECONDS: ${PLAN_RUN_TIMEOUT_WATCHDOG_GRACE_SECONDS:-300}
+      AGENT_HOSTS: ${OPENLOADHUB_DOCKER_AGENT_HOSTS:-ptp-agent:9096,ptp-agent-2:9096,ptp-agent-3:9096,ptp-agent-4:9096}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ptp-admin-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      ptp-admin:
+        condition: service_started
+      ptp-agent:
+        condition: service_started
+      ptp-agent-2:
+        condition: service_started
+      ptp-agent-3:
+        condition: service_started
+      ptp-agent-4:
+        condition: service_started
+      demo-target:
+        condition: service_healthy
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+      - tmp-reports:/tmp_reports
+    networks:
+      - openloadhub-demo
+
+  ptp-demo-seed:
+    image: python:3.11-slim
+    restart: "no"
+    command: ["python", "/app/scripts/seed-public-demo.py"]
+    environment:
+      PTP_API_BASE_URL: http://ptp-admin:8000/api/v1
+      DEFAULT_TESTER_USERNAME: ${DEFAULT_TESTER_USERNAME:-demo_tester}
+      DEFAULT_TESTER_PASSWORD: ${DEFAULT_TESTER_PASSWORD:-ptp_demo_tester}
+      OPENLOADHUB_DEMO_ENV: ${OPENLOADHUB_DEMO_ENV:-demo}
+      DEMO_TARGET_HTTP_BASE_URL: ${DEMO_TARGET_HTTP_BASE_URL:-http://demo-target:8080}
+      DEMO_TARGET_GRPC_ADDRESS: ${DEMO_TARGET_GRPC_ADDRESS:-demo-target:50051}
+      OPENLOADHUB_DEMO_PROTO_PATH: /app/demo/target-service/hello.proto
+      OPENLOADHUB_DEMO_TASK_POD_COUNT: ${OPENLOADHUB_DEMO_TASK_POD_COUNT:-1}
+      OPENLOADHUB_DEMO_PLAN_POD_COUNT: ${OPENLOADHUB_DEMO_PLAN_POD_COUNT:-4}
+      OPENLOADHUB_DEMO_TARGET_TPS: ${OPENLOADHUB_DEMO_TARGET_TPS:-5}
+      OPENLOADHUB_DEMO_DURATION_SECONDS: ${OPENLOADHUB_DEMO_DURATION_SECONDS:-20}
+      OPENLOADHUB_DEMO_PLAN_INTERVAL_SECONDS: ${OPENLOADHUB_DEMO_PLAN_INTERVAL_SECONDS:-5}
+    volumes:
+      - ./scripts/seed-public-demo.py:/app/scripts/seed-public-demo.py:ro
+      - ./demo/target-service/hello.proto:/app/demo/target-service/hello.proto:ro
+    depends_on:
+      ptp-admin:
+        condition: service_started
+      ptp-agent:
+        condition: service_started
+      ptp-agent-2:
+        condition: service_started
+      ptp-agent-3:
+        condition: service_started
+      ptp-agent-4:
+        condition: service_started
+      demo-target:
+        condition: service_healthy
+    networks:
+      - openloadhub-demo
+
+  ptp-agent:
+    build:
+      context: .
+      dockerfile: backend/ptp-agent/Dockerfile
+      args:
+        INSTALL_CHROMIUM: ${AGENT_INSTALL_CHROMIUM:-0}
+        JMETER_DOWNLOAD_URL: ${JMETER_DOWNLOAD_URL:-https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.3.tgz}
+        JMETER_GRPC_PLUGIN_URL: ${JMETER_GRPC_PLUGIN_URL:-https://github.com/zalopay-oss/jmeter-grpc-request/releases/download/v1.2.6/jmeter-grpc-request.jar}
+    restart: unless-stopped
+    environment:
+      COMPOSE_SERVICE: ptp-agent
+      ENABLE_NACOS: "0"
+      AGENT_EXEC_MODE: ${AGENT_EXEC_MODE:-real}
+      AGENT_PORT: "9096"
+      K6_BIN: ${K6_BIN:-/usr/local/bin/k6}
+      PUSHGATEWAY_URL: http://pushgateway:9091
+      PROMETHEUS_RW_URL: http://prometheus:9090/api/v1/write
+      JMETER_HOME: /opt/apache-jmeter-5.4.3
+      JMETER_INFLUXDB_HOST: influxdb
+      JMETER_INFLUXDB_PORT: "8086"
+      JMETER_INFLUXDB_ORG: ${JMETER_INFLUXDB_ORG:-ptp}
+      JMETER_INFLUXDB_BUCKET: ${JMETER_INFLUXDB_BUCKET:-jmeter}
+      JMETER_INFLUXDB_TOKEN: ${JMETER_INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      JMETER_INFLUXDB_HTTP_SCHEME: http
+      USE_S3: "0"
+    ports:
+      - "${PTP_AGENT_PORT:-19096}:9096"
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+    depends_on:
+      - pushgateway
+      - prometheus
+      - influxdb
+      - demo-target
+    networks:
+      - openloadhub-demo
+
+  ptp-agent-2:
+    build:
+      context: .
+      dockerfile: backend/ptp-agent/Dockerfile
+      args:
+        INSTALL_CHROMIUM: ${AGENT_INSTALL_CHROMIUM:-0}
+        JMETER_DOWNLOAD_URL: ${JMETER_DOWNLOAD_URL:-https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.3.tgz}
+        JMETER_GRPC_PLUGIN_URL: ${JMETER_GRPC_PLUGIN_URL:-https://github.com/zalopay-oss/jmeter-grpc-request/releases/download/v1.2.6/jmeter-grpc-request.jar}
+    restart: unless-stopped
+    environment:
+      COMPOSE_SERVICE: ptp-agent-2
+      ENABLE_NACOS: "0"
+      AGENT_EXEC_MODE: ${AGENT_EXEC_MODE:-real}
+      AGENT_PORT: "9096"
+      K6_BIN: ${K6_BIN:-/usr/local/bin/k6}
+      PUSHGATEWAY_URL: http://pushgateway:9091
+      PROMETHEUS_RW_URL: http://prometheus:9090/api/v1/write
+      JMETER_HOME: /opt/apache-jmeter-5.4.3
+      JMETER_INFLUXDB_HOST: influxdb
+      JMETER_INFLUXDB_PORT: "8086"
+      JMETER_INFLUXDB_ORG: ${JMETER_INFLUXDB_ORG:-ptp}
+      JMETER_INFLUXDB_BUCKET: ${JMETER_INFLUXDB_BUCKET:-jmeter}
+      JMETER_INFLUXDB_TOKEN: ${JMETER_INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      JMETER_INFLUXDB_HTTP_SCHEME: http
+      USE_S3: "0"
+    ports:
+      - "${PTP_AGENT_2_PORT:-19097}:9096"
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+    depends_on:
+      - pushgateway
+      - prometheus
+      - influxdb
+      - demo-target
+    networks:
+      - openloadhub-demo
+
+  ptp-agent-3:
+    build:
+      context: .
+      dockerfile: backend/ptp-agent/Dockerfile
+      args:
+        INSTALL_CHROMIUM: ${AGENT_INSTALL_CHROMIUM:-0}
+        JMETER_DOWNLOAD_URL: ${JMETER_DOWNLOAD_URL:-https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.3.tgz}
+        JMETER_GRPC_PLUGIN_URL: ${JMETER_GRPC_PLUGIN_URL:-https://github.com/zalopay-oss/jmeter-grpc-request/releases/download/v1.2.6/jmeter-grpc-request.jar}
+    restart: unless-stopped
+    environment:
+      COMPOSE_SERVICE: ptp-agent-3
+      ENABLE_NACOS: "0"
+      AGENT_EXEC_MODE: ${AGENT_EXEC_MODE:-real}
+      AGENT_PORT: "9096"
+      K6_BIN: ${K6_BIN:-/usr/local/bin/k6}
+      PUSHGATEWAY_URL: http://pushgateway:9091
+      PROMETHEUS_RW_URL: http://prometheus:9090/api/v1/write
+      JMETER_HOME: /opt/apache-jmeter-5.4.3
+      JMETER_INFLUXDB_HOST: influxdb
+      JMETER_INFLUXDB_PORT: "8086"
+      JMETER_INFLUXDB_ORG: ${JMETER_INFLUXDB_ORG:-ptp}
+      JMETER_INFLUXDB_BUCKET: ${JMETER_INFLUXDB_BUCKET:-jmeter}
+      JMETER_INFLUXDB_TOKEN: ${JMETER_INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      JMETER_INFLUXDB_HTTP_SCHEME: http
+      USE_S3: "0"
+    ports:
+      - "${PTP_AGENT_3_PORT:-19098}:9096"
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+    depends_on:
+      - pushgateway
+      - prometheus
+      - influxdb
+      - demo-target
+    networks:
+      - openloadhub-demo
+
+  ptp-agent-4:
+    build:
+      context: .
+      dockerfile: backend/ptp-agent/Dockerfile
+      args:
+        INSTALL_CHROMIUM: ${AGENT_INSTALL_CHROMIUM:-0}
+        JMETER_DOWNLOAD_URL: ${JMETER_DOWNLOAD_URL:-https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.3.tgz}
+        JMETER_GRPC_PLUGIN_URL: ${JMETER_GRPC_PLUGIN_URL:-https://github.com/zalopay-oss/jmeter-grpc-request/releases/download/v1.2.6/jmeter-grpc-request.jar}
+    restart: unless-stopped
+    environment:
+      COMPOSE_SERVICE: ptp-agent-4
+      ENABLE_NACOS: "0"
+      AGENT_EXEC_MODE: ${AGENT_EXEC_MODE:-real}
+      AGENT_PORT: "9096"
+      K6_BIN: ${K6_BIN:-/usr/local/bin/k6}
+      PUSHGATEWAY_URL: http://pushgateway:9091
+      PROMETHEUS_RW_URL: http://prometheus:9090/api/v1/write
+      JMETER_HOME: /opt/apache-jmeter-5.4.3
+      JMETER_INFLUXDB_HOST: influxdb
+      JMETER_INFLUXDB_PORT: "8086"
+      JMETER_INFLUXDB_ORG: ${JMETER_INFLUXDB_ORG:-ptp}
+      JMETER_INFLUXDB_BUCKET: ${JMETER_INFLUXDB_BUCKET:-jmeter}
+      JMETER_INFLUXDB_TOKEN: ${JMETER_INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-ptp_demo_influx_token}
+      JMETER_INFLUXDB_HTTP_SCHEME: http
+      USE_S3: "0"
+    ports:
+      - "${PTP_AGENT_4_PORT:-19099}:9096"
+    volumes:
+      - tmp-scripts:/tmp_scripts
+      - tmp-task-assets:/tmp_task_assets
+    depends_on:
+      - pushgateway
+      - prometheus
+      - influxdb
+      - demo-target
+    networks:
+      - openloadhub-demo
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        VITE_PTP_PUBLIC_ALPHA_MODE: "true"
+        VITE_PTP_ENABLE_MIXED_RUNS: "false"
+        VITE_PTP_ENABLE_SELF_APM: "false"
+        VITE_PTP_ENABLE_DYNAMIC_K6_CONTROL: "false"
+        VITE_PTP_ENABLE_AI_FEATURES: "false"
+        VITE_PTP_ENABLE_PLANS: "true"
+        VITE_PTP_ENABLE_PLAN_RUNS: "true"
+        VITE_PTP_ENABLE_TREND_ANALYSIS: "false"
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE: ${VITE_API_BASE:-http://127.0.0.1:18000}
+    ports:
+      - "${PTP_FRONTEND_PORT:-13000}:3000"
+    depends_on:
+      - ptp-admin
+    networks:
+      - openloadhub-demo

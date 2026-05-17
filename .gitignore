@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+
+# Local environments and runtime data
+.env
+.env.local
+.env.host.local
+.venv/
+.tmp/
+logs/
+tmp_task_assets/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

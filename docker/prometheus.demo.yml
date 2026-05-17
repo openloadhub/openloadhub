@@ -1,0 +1,51 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: pushgateway
+    honor_labels: true
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - pushgateway:9091
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - prometheus:9090
+
+  - job_name: demo-target
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - demo-target:8080
+        labels:
+          target_instance: openloadhub-demo-target
+
+  - job_name: influxdb
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - influxdb:8086
+
+  - job_name: redis
+    static_configs:
+      - targets:
+          - redis-exporter:9121
+
+  - job_name: mysql
+    static_configs:
+      - targets:
+          - mysqld-exporter:9104
+
+  - job_name: grafana
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - grafana:3000
+
+  - job_name: cadvisor
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - cadvisor:8080
